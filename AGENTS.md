@@ -32,6 +32,9 @@
 - **SDL3 Модель ввода:** Кнопки мыши 1-based (`InputConstants.MOUSE_BUTTON_LEFT = 1`, `RIGHT = 3`, `MIDDLE = 2`).
 - **Title Screen Registry Guard:** Инициализаторы компонентов предметов (`BuiltInRegistries.DATA_COMPONENT_INITIALIZERS.build()`) требуют защитную обертку `safeProvider` при открытии GUI из главного меню.
 
+### Сетевая совместимость (ViaFabricPlus / Протоколы):
+- **Предотвращение двойной трансляции:** При подключении к серверам с установленными плагинами `ViaVersion`/`ViaBackwards` клиент обязан по умолчанию отдавать приоритет нативному протоколу (`fixDoubleTranslation`), не затирая при этом постоянные настройки игрока в интерфейсе.
+
 ---
 
 ## 3. Чек-лист проверки перед коммитом (Verification Checklist)
