@@ -117,3 +117,27 @@ NeoForge по умолчанию включает раннее окно загр
   - Доступ к настройкам: `ViaFabricPlusImpl.impl().settings().mr712().fixDoubleTranslation().isActive()`
   - Детектор: `ProtocolVersionDetector.get(this.val$hostAndPort, address, ProtocolTranslationImpl.NATIVE_VERSION)`
   - Сброс: `ProtocolTranslationImpl.targetVersion(targetVersion)`
+
+---
+
+## 6. Ребрендинг идентификатора мода (Mod ID Renaming & Ecosystem Compatibility)
+
+При создании LTS-форка мода (например, `ViaFabricPlusLTS`):
+1. **Правило именования ID:** Идентификатор меняется на `viafabricplus-lts` (в нижнем регистре по стандарту Fabric).
+2. **Предотвращение поломки зависимостей (`provides`):**
+   - Множество аддонов и сабмодулей (например, `viafabricplus-api`, `viabedrock`) имеют декларацию `"depends": { "viafabricplus": "*" }`.
+   - Чтобы загрузчик Fabric Loader не выдавал ошибку отсутствия зависимости, в `fabric.mod.json` обязательно декларируется виртуальное предоставление исходного мода:
+     ```json
+     "provides": [
+       "viafabricplus",
+       "viaversion",
+       "viabackwards"
+     ]
+     ```
+3. **Безопасное получение метаданных контейнера:**
+   - В коде инициализации плагинов Mixin и основного класса мода поиск контейнера должен поддерживать обратную совместимость:
+     ```java
+     FabricLoader.getInstance().getModContainer("viafabricplus-lts")
+         .orElseGet(() -> FabricLoader.getInstance().getModContainer("viafabricplus").get())
+         .getMetadata();
+     ```
