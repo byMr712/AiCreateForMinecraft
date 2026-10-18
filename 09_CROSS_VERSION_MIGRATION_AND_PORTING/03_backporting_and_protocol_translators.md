@@ -74,3 +74,46 @@ NeoForge по умолчанию включает раннее окно загр
   3. В версиях до 26.3 целевой класс — `com.mojang.authlib.yggdrasil.YggdrasilServicesKeyInfo`.
   4. В версиях 26.3+ целевой класс — `com.mojang.authlib.services.MinecraftServicesKeyInfo`.
 
+
+---
+
+## 5. Предотвращение двойного транслирования пакетов (Fix Double Translation Hook)
+
+### Проблема («sending packets too fast», десинхронизация, рывки)
+При подключении клиента с ViaFabricPlus к серверу на нативной или промежуточной версии через BungeeCord/Velocity или при не сброшенном целевом протоколе, клиентский транслятор может попытаться повторно транслировать сетевые пакеты. Сервер фиксирует отправку некорректных/ускоренных пакетов («`sending packets too fast`»), что приводит к кикам, дёрганьям камеры и отбрасыванию назад.
+
+### Механизм решения (ConnectScreen Interceptor)
+Перехват точки подключения (`ConnectScreen$1.run()`) перед инициализацией `Connection.connect(...)`:
+1. Автоматическое определение версии сервера (`ProtocolVersionDetector.get(...)`).
+2. Если детектированная версия сервера совпадает с нативной версией клиента (`targetVersion == NATIVE_VERSION`), принудительный сброс целевой версии на нативную:
+   - Отключает лишние пайплайны ViaVersion.
+   - Пакеты идут напрямую без повторной сериализации.
+
+### Различия по группам версий:
+- **1.21 – 1.21.3 (Yarn, `de.florianmichael`):**
+  - Миксин: `de.florianmichael.viafabricplus.injection.mixin.base.integration.MixinConnectScreen_1`
+  - Доступ к настройкам: `Mr712Settings.global().fixDoubleTranslation.getValue()`
+  - Детектор: `ProtocolVersionDetector.get(address, ProtocolTranslator.NATIVE_VERSION)`
+  - Сброс: `ProtocolTranslator.getTargetVersion().setVersion(targetVersion)`
+- **1.21.4 (Yarn, `com.viaversion`):**
+  - Миксин: `com.viaversion.viafabricplus.injection.mixin.base.integration.MixinConnectScreen_1`
+  - Доступ к настройкам: `Mr712Settings.global().fixDoubleTranslation.getValue()`
+  - Детектор: `ProtocolVersionDetector.get(address, ProtocolTranslator.NATIVE_VERSION)`
+  - Сброс: `ProtocolTranslator.getTargetVersion().setVersion(targetVersion)`
+- **1.21.5 – 1.21.9 (Yarn, `com.viaversion`):**
+  - Миксин: `com.viaversion.viafabricplus.injection.mixin.base.ui.MixinConnectScreen_1`
+  - Доступ к настройкам: `Mr712Settings.INSTANCE.fixDoubleTranslation.getValue()`
+  - Детектор: `ProtocolVersionDetector.get(field_33737, address, ProtocolTranslator.NATIVE_VERSION)`
+  - Сброс: `ProtocolTranslator.getTargetVersion().setVersion(targetVersion)`
+- **1.21.10 – 1.21.11 (Mojang mappings, `com.viaversion`):**
+  - Миксин: `base/ui/` (1.21.10) / `base/integration/` (1.21.11)
+  - Детектор: `ProtocolVersionDetector.get(this.val$hostAndPort, address, ProtocolTranslator.NATIVE_VERSION)`
+- **26.1 – 26.1.2 (Mojang mappings, `core/integration`):**
+  - Миксин: `com.viaversion.viafabricplus.injection.mixin.core.integration.MixinConnectScreen_1`
+  - Доступ к настройкам: `Mr712Settings.INSTANCE.fixDoubleTranslation.getValue()`
+  - Детектор: `ProtocolVersionDetector.get(this.val$hostAndPort, address, ProtocolTranslator.NATIVE_VERSION)`
+- **26.2 – 26.3 (Mojang mappings, Modern Settings API, JDK 25 в 26.3):**
+  - Миксин: `com.viaversion.viafabricplus.injection.mixin.core.integration.MixinConnectScreen_1`
+  - Доступ к настройкам: `ViaFabricPlusImpl.impl().settings().mr712().fixDoubleTranslation().isActive()`
+  - Детектор: `ProtocolVersionDetector.get(this.val$hostAndPort, address, ProtocolTranslationImpl.NATIVE_VERSION)`
+  - Сброс: `ProtocolTranslationImpl.targetVersion(targetVersion)`
