@@ -28,12 +28,16 @@
 - **EntityRenderState:** Рендеринг сущностей переведен на состояние `RenderState` (например `BipedEntityRenderState`).
 
 ### Minecraft 26.x:
-- **Java 25 LTS:** Требуется компилятор и рантайм Java 25.
+- **Java 25 LTS:** Требуется компилятор и рантайм Java 25. При сборке через Fabric Loom 1.18+ переменная окружения `JAVA_HOME` обязана указывать на JDK 25.
 - **SDL3 Модель ввода:** Кнопки мыши 1-based (`InputConstants.MOUSE_BUTTON_LEFT = 1`, `RIGHT = 3`, `MIDDLE = 2`).
 - **Title Screen Registry Guard:** Инициализаторы компонентов предметов (`BuiltInRegistries.DATA_COMPONENT_INITIALIZERS.build()`) требуют защитную обертку `safeProvider` при открытии GUI из главного меню.
+- **Authlib 10.x:** `YggdrasilServicesKeyInfo` удалён и заменён на `com.mojang.authlib.services.MinecraftServicesKeyInfo`. Переход по URL выполняется через `Blaze3D.openUri`.
 
-### Сетевая совместимость (ViaFabricPlus / Протоколы):
+### Сетевая совместимость и интерфейс (ViaFabricPlus / Протоколы):
 - **Предотвращение двойной трансляции:** При подключении к серверам с установленными плагинами `ViaVersion`/`ViaBackwards` клиент обязан по умолчанию отдавать приоритет нативному протоколу (`fixDoubleTranslation`), не затирая при этом постоянные настройки игрока в интерфейсе.
+- **Защита от пустых подписей скинов (Empty Signature Guard):** В `Property.hasSignature()` обязательна проверка `!signature.isEmpty()`, а в `validateProperty` — возврат `false` при пустой строке, предотвращающий `SignatureException` на оффлайн/гибридных серверах.
+- **Геометрия вкладок в заголовке:** Вкладки фильтрации списков в верхней части экрана обязаны иметь отступ вправо минимум `+25px`, чтобы не перекрывать кнопку «Назад» (`<-`) по координатам `(5, 5)`.
+
 
 ---
 

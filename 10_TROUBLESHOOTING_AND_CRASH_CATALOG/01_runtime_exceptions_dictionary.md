@@ -67,3 +67,13 @@
 - **Лог:** `com.google.gson.JsonSyntaxException: Not a boolean: "false"`
 - **Причина:** Булево поле в JSON компонента предмета записано в кавычках как строка.
 - **Решение:** Записать без кавычек: `"can_always_eat": false`.
+
+---
+
+## 11. `SignatureException: Bad signature length: 0` / `Invalid signature length`
+- **Лог:** `java.security.SignatureException: Bad signature length: 0` при входе на сервер или обновлении скина в `com.mojang.authlib.yggdrasil.YggdrasilServicesKeyInfo.validateProperty`.
+- **Причина:** Сервер (оффлайн-режим, BungeeCord/Velocity, пиратский прокси или плагин кастомных скинов) отправляет свойство профиля с пустой строкой в качестве подписи (`"signature": ""`). Метод `Property.hasSignature()` проверяет только `signature != null` и возвращает `true`, после чего валидатор пытается проверить пустой массив байт через RSA-подпись, выбрасывая фатальный `SignatureException` и разрывая соединение.
+- **Решение:** 
+  1. Переопределить `Property.hasSignature()` через `@Overwrite`: возвращать `signature != null && !signature.isEmpty()`.
+  2. Внедрить защитный `@Inject` в `HEAD` метода `validateProperty`: если `property.signature() == null || property.signature().isEmpty()`, сразу возвращать `false` (`cir.setReturnValue(false)`). Для Authlib < 10 миксин вешается на `com.mojang.authlib.yggdrasil.YggdrasilServicesKeyInfo`, а для Authlib >= 10 (Minecraft 26.3+) — на `com.mojang.authlib.services.MinecraftServicesKeyInfo`.
+
