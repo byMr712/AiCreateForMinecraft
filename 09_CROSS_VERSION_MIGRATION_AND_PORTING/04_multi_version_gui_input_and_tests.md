@@ -320,3 +320,25 @@ task jarNeoForge(type: Jar) {
 - `AbstractScrollWidgetMixin` (1.21–1.21.3) или `AbstractTextAreaWidgetMixin` (1.21.4–1.21.5) — отменить `renderBackground`/`renderBorder` для `MultiLineEditBox`, чтобы был виден пергаментный фон мода.
 
 Итог: поле описания на 1.21.x выглядит как в 26.3 — пергамент, тёмный текст, без счётчика.
+
+## 12. Ресурсы мода без Fabric API
+
+Ключевой факт: **Fabric Loader сам не монтирует ресурсы модов**. Пакеты `assets/<modid>` (текстуры, `lang`, `icons.json`) появляются в `ResourceManager` только через модуль `fabric-resource-loader-v0` из Fabric API. Если мод объявляет «ноль зависимостей», но рисует свои текстуры, на чистом Fabric он покажет magenta/black missing texture, а переводы — сырые ключи. Ошибка тихая: в логе только `Failed to load texture: <modid>:...`.
+
+Решения для zero-dependency мода:
+
+1. **Текстуры** — читать PNG из classpath и регистрировать в `TextureManager`:
+   ```java
+   var image = NativeImage.read(Paper.class.getResourceAsStream("/assets/" + id.getNamespace() + "/" + id.getPath()));
+   var texture = new DynamicTexture(image); // 1.21–1.21.4
+   var texture = new DynamicTexture(() -> "mymod texture", image); // 1.21.5+
+   Minecraft.getInstance().getTextureManager().register(id, texture);
+   ```
+   Регистрировать лениво перед первым `blit`. `TextureManager.getTexture(id)` возвращает **missing-texture placeholder, а не null**, поэтому проверять «уже загружено» нужно по своему `Map<Identifier, DynamicTexture>` и сравнивать `getTexture(id) == свояТекстура`. После F3+T/рестарта ресурсов записи очищаются — при следующем кадре текстура загрузится заново.
+2. **Переводы** — читать `en_us.json`/`ru_ru.json` из classpath в `Map<String,String>` и форматировать `%s`/`%d` самостоятельно (например, `String.format`). `Component.translatable` оставить только как fallback для случаев, когда ресурсы всё-таки смонтированы.
+3. **Иконка мода** (`fabric.mod.json → icon`) без resource-loader может не отображаться в Mod Menu — это не влияет на игру.
+
+Проверка: запуск на «пустом» Fabric-инстансе без Fabric API. В логе не должно быть `Failed to load texture: <modid>:`; на титульном экране иконки мода должны рисоваться, а не magenta/black.
+
+> [!NOTE]
+> На NeoForge такой проблемы нет: FML монтирует ресурсы мода сам.
