@@ -87,9 +87,13 @@ g.blit(pipeline, tex, x, y, 0, 0, size, size, 16, 16, 16, 16);
 
 | Версия | `DynamicTexture` | Пиксели `NativeImage` | Высота мира |
 | :--- | :--- | :--- | :--- |
-| 1.21–1.21.4 | `DynamicTexture(NativeImage)` | `getPixelRGBA` / `setPixelRGBA` | `getMinBuildHeight()` |
-| 1.21.5+ | `DynamicTexture(Supplier<String>, NativeImage)` | `getPixel` / `setPixel` | `getMinY()` |
-| 26.x | `DynamicTexture(Supplier<String>, NativeImage)` | `getPixelRGBA` / `setPixelRGBA` | `getMinY()` |
+| 1.21–1.21.1 | `DynamicTexture(NativeImage)` | `getPixelRGBA` / `setPixelRGBA` — **ABGR**, R/B надо менять местами | `getMinBuildHeight()` |
+| 1.21.2–1.21.4 | `DynamicTexture(NativeImage)` | `getPixel` / `setPixel` — ARGB | `getMinBuildHeight()` |
+| 1.21.5+ | `DynamicTexture(Supplier<String>, NativeImage)` | `getPixel` / `setPixel` — ARGB | `getMinY()` |
+| 26.x | `DynamicTexture(Supplier<String>, NativeImage)` | `getPixel` / `setPixel` — ARGB | `getMinY()` |
+
+> [!CAUTION]
+> В 1.21–1.21.1 методы называются `getPixelRGBA`/`setPixelRGBA`, но работают с **ABGR**. Если передать ARGB напрямую (как в 1.21.2+), красный и синий каналы меняются местами: трава становится бирюзовой, вода — коричневой, лёд — лавандовым. Перед `setPixelRGBA` и после `getPixelRGBA` меняйте R и B: `(c & 0xFF00) | (c & 0xFF) << 16 | (c >> 16) & 0xFF | c & 0xFF000000`.
 
 > 1.21.9–1.21.10 по GUI совпадают с 1.21.6–1.21.8. В 1.21.9 `GuiGraphics.renderOutline` заменён на `submitOutline`, а ввод снова перешёл на event-API (`MouseButtonEvent`/`KeyEvent`/`CharacterEvent`). В 1.21.11 `ResourceLocation` переименован в `Identifier`, поэтому ветку 1.21.11 проще собирать от 26.x-кода, а не от 1.21.10.
 >
