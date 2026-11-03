@@ -20,7 +20,7 @@
 | **[06_NETWORKING_AND_BYTECODE_MIXINS](file:///E:/GitHub/AiCreateForMinecraft/06_NETWORKING_AND_BYTECODE_MIXINS)** | Сеть на `CustomPayload`, миксины, аксессоры, `@WrapOperation` и правила безопасного размещения серверных миксинов. |
 | **[07_RENDERING_SHADERS_AND_OPENGL](file:///E:/GitHub/AiCreateForMinecraft/07_RENDERING_SHADERS_AND_OPENGL)** | EntityRenderState, шейдеры 1.21.4, матрицы WorldRenderer, Zero-Client HUD через шрифты и negative spaces, слоты текстур и порталы. |
 | **[08_PERFORMANCE_AND_OPTIMIZATION](file:///E:/GitHub/AiCreateForMinecraft/08_PERFORMANCE_AND_OPTIMIZATION)** | Оптимизация тиков без лишних аллокаций Stream API, `BlockPos.Mutable`, безопасная работа с чанками и атомарные конфиги. |
-| **[09_CROSS_VERSION_MIGRATION_AND_PORTING](file:///E:/GitHub/AiCreateForMinecraft/09_CROSS_VERSION_MIGRATION_AND_PORTING)** | Чек-листы обновления модов с 1.20 на 1.21.4 и с 1.21 на 26.x (SDL3, `safeProvider`), бэкпортирование нативных библиотек. |
+| **[09_CROSS_VERSION_MIGRATION_AND_PORTING](file:///E:/GitHub/AiCreateForMinecraft/09_CROSS_VERSION_MIGRATION_AND_PORTING)** | Чек-листы обновления модов с 1.20 на 1.21.4 и с 1.21 на 26.x (SDL3, `safeProvider`), бэкпортирование нативных библиотек. Практический мультиверсионный порт GUI/ввода на 1.21–1.21.11 и 26.x, миксины и client-gametest. |
 | **[10_TROUBLESHOOTING_AND_CRASH_CATALOG](file:///E:/GitHub/AiCreateForMinecraft/10_TROUBLESHOOTING_AND_CRASH_CATALOG)** | Разбор частых крашей с готовыми решениями и 35-шаговый чек-лист проверки мода перед релизом. |
 
 ---

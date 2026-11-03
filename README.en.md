@@ -20,7 +20,7 @@ In this repository, I have gathered my solutions, code templates, and notes for 
 | **[06_NETWORKING_AND_BYTECODE_MIXINS](file:///E:/GitHub/AiCreateForMinecraft/06_NETWORKING_AND_BYTECODE_MIXINS)** | `CustomPayload` networking, mixins, accessors, `@WrapOperation`, and safe placement for server-side mixins. |
 | **[07_RENDERING_SHADERS_AND_OPENGL](file:///E:/GitHub/AiCreateForMinecraft/07_RENDERING_SHADERS_AND_OPENGL)** | EntityRenderState, shader paths in 1.21.4, WorldRenderer matrices, Zero-Client HUD via fonts and negative spaces, 16 texture units, and portals. |
 | **[08_PERFORMANCE_AND_OPTIMIZATION](file:///E:/GitHub/AiCreateForMinecraft/08_PERFORMANCE_AND_OPTIMIZATION)** | Optimizing ticks without Stream API allocations, `BlockPos.Mutable`, safe chunk access, and atomic config saving. |
-| **[09_CROSS_VERSION_MIGRATION_AND_PORTING](file:///E:/GitHub/AiCreateForMinecraft/09_CROSS_VERSION_MIGRATION_AND_PORTING)** | Checklists for updating mods from 1.20 to 1.21.4 and 1.21 to 26.x (SDL3, `safeProvider`), and native library backporting. |
+| **[09_CROSS_VERSION_MIGRATION_AND_PORTING](file:///E:/GitHub/AiCreateForMinecraft/09_CROSS_VERSION_MIGRATION_AND_PORTING)** | Checklists for updating mods from 1.20 to 1.21.4 and 1.21 to 26.x (SDL3, `safeProvider`), and native library backporting. Practical multi-version GUI/input porting for 1.21–1.21.11 and 26.x, mixins and client gametests. |
 | **[10_TROUBLESHOOTING_AND_CRASH_CATALOG](file:///E:/GitHub/AiCreateForMinecraft/10_TROUBLESHOOTING_AND_CRASH_CATALOG)** | Breakdown of common runtime crashes with ready-to-use fixes and a 35-step pre-release verification checklist. |
 
 ---
