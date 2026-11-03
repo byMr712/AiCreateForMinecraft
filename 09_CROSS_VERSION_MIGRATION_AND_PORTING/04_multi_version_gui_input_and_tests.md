@@ -281,3 +281,42 @@ task jarNeoForge(type: Jar) {
 
 - Не передавайте вложенные массивы пар в PowerShell-функцию без явной типизации: PowerShell может «сплющить» массив, и `.Replace($pair[0], $pair[1])` начнёт заменять отдельные символы (например, `l` → `e`), ломая Java-файлы. Для массовых правок безопаснее `edit`/`write` или явные последовательные `.Replace()`.
 - После каждой массовой замены проверяйте `git diff --stat` и компиляцию, а не только успешный `build`.
+
+## 10. Функциональные автотесты механик
+
+Скриншоты проверяют внешний вид, но не логику. Для механик добавлен отдельный `MapMechanicsTest` (Fabric client gametest), который выполняет ~67 проверок:
+
+- **Storage:** `sanitize`, `asciiId`, `dimFolder`, JSON round-trip маркера, очистка тестового мира.
+- **Marker:** `copy()`/`apply()`, глубокая копия `screenshots` и `shotDrawings`.
+- **Stroke:** `addPoint`, `pointCount`, координаты, типы.
+- **Theme/T:** 8 тем, уникальные id, каталог иконок, поиск (`cave`, `дом`), переводы.
+- **MapView:** world↔screen, `zoomAt`, `contains`.
+- **ModConfig:** сохранение/чтение JSON, `clamp()` индексов, восстановление значений.
+- **MapManager/MapLayer/MapTile:** live-сессия, измерение, скан чанков, пиксели тайла, `pack`.
+- **MapSession:** сохранение/перезагрузка маркеров и рисунков.
+- **ImageCache:** `importImage`, файл на диске, сохранение в маркере, удаление.
+
+Тест входит в `fabric-client-gametest` entrypoint и запускается тем же:
+
+```bash
+./gradlew clean build runClientGameTest
+```
+
+> На 1.21–1.21.4 клиентского gametest API в Fabric API ещё нет, поэтому механики там проверяются только сборкой.
+
+## 11. Текстовые поля: паритет с 26.3 на 1.21.x
+
+В 26.3 у полей отключены тень и ванильный фон. В 1.21.x это доступно не сразу:
+
+| Версия | `EditBox.setTextShadow` | `MultiLineEditBox` |
+| :--- | :--- | :--- |
+| 1.21–1.21.5 | нет | конструктор; тёмный фон, рамка и счётчик |
+| 1.21.6+ | да | builder с `setTextShadow(false)`, `setShowBackground(false)`, `setShowDecorations(false)` |
+
+Решения для 1.21–1.21.5:
+
+- `EditBoxMixin` — `@Redirect` вызовов `GuiGraphics.drawString(...)` в `EditBox.renderWidget` на перегрузку без тени.
+- `MultiLineEditBoxMixin` — в `renderContents` рисовать текст цветом `Paper.INK` без тени, в `renderDecorations` не рисовать счётчик.
+- `AbstractScrollWidgetMixin` (1.21–1.21.3) или `AbstractTextAreaWidgetMixin` (1.21.4–1.21.5) — отменить `renderBackground`/`renderBorder` для `MultiLineEditBox`, чтобы был виден пергаментный фон мода.
+
+Итог: поле описания на 1.21.x выглядит как в 26.3 — пергамент, тёмный текст, без счётчика.
