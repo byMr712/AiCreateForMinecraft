@@ -13,7 +13,7 @@
 | Раздел | Описание |
 | :--- | :--- |
 | **[01_FOUNDATIONS](file:///E:/GitHub/AiCreateForMinecraft/01_FOUNDATIONS)** | Версии Java (21/25), байткод, шаблоны `build.gradle`, `gradle.properties`, формат версий SemVer `X.X` (без префикса `v`) и манифесты. |
-| **[02_LOADERS_AND_MULTILOADER](file:///E:/GitHub/AiCreateForMinecraft/02_LOADERS_AND_MULTILOADER)** | Fabric, NeoForge, моя сборка Dual-Target (два JAR из одного кода через Loom без лишних подпроектов) и Architectury. |
+| **[02_LOADERS_AND_MULTILOADER](file:///E:/GitHub/AiCreateForMinecraft/02_LOADERS_AND_MULTILOADER)** | Fabric, NeoForge, моя сборка Dual-Target (два JAR из одного кода через Loom без лишних подпроектов), Architectury и локализация без Fabric API (переводы клавиш через `Language`). |
 | **[03_CORE_GAMEPLAY_DEVELOPMENT](file:///E:/GitHub/AiCreateForMinecraft/03_CORE_GAMEPLAY_DEVELOPMENT)** | Предметы с `.registryKey()`, Data Components, Client Item Definitions, блоки, слои прозрачности, синтаксис рецептов 1.21+ и GUI. |
 | **[04_ENTITIES_MOBS_AND_ANIMATIONS](file:///E:/GitHub/AiCreateForMinecraft/04_ENTITIES_MOBS_AND_ANIMATIONS)** | Создание мобов, настройка AI целей, физика воды, серверные Fake Players, интеграция GeckoLib, анимации и звуки. |
 | **[05_WORLDGEN_AND_STRUCTURES](file:///E:/GitHub/AiCreateForMinecraft/05_WORLDGEN_AND_STRUCTURES)** | Схемы генерации мира, кастомные структуры (папка `structure/`, обязательное GZIP сжатие NBT `1F 8B`) и конвертация схем. |
