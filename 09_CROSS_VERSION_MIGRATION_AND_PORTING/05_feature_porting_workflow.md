@@ -130,6 +130,28 @@ Screenshot.grab(File directory, RenderTarget target, Consumer<Component> message
 | `dimension().identifier()` | 26.x и 1.21.11+ |
 | `dimension().location()` | 1.21–1.21.10 |
 
+### Кнопки мыши в 26.x
+
+В 26.x (SDL3) кнопки мыши **1-based**:
+
+- `MOUSE_BUTTON_LEFT = 1`
+- `MOUSE_BUTTON_MIDDLE = 2`
+- `MOUSE_BUTTON_RIGHT = 3`
+
+В 1.21.x левая кнопка — `0`. Поэтому код вида
+
+```java
+if (pressButton == 0) { /* рисование */ }
+```
+
+на 26.x не срабатывает: начинается панорамирование карты вместо рисования. Всегда сравнивайте с константой:
+
+```java
+if (pressButton == InputConstants.MOUSE_BUTTON_LEFT) { ... }
+```
+
+Это особенно легко пропустить при переносе фич с 1.21 на 26.x: на old-версии баг не проявляется.
+
 > [!TIP]
 > После переноса кода с 26.x на 1.21.x делайте пакетные замены:
 > `GuiGraphicsExtractor → GuiGraphics`, `g.text → g.drawString`, `g.outline → Paper.outline(g, ...)`,
