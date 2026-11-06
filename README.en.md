@@ -22,6 +22,7 @@ In this repository, I have gathered my solutions, code templates, and notes for 
 | **[08_PERFORMANCE_AND_OPTIMIZATION](file:///E:/GitHub/AiCreateForMinecraft/08_PERFORMANCE_AND_OPTIMIZATION)** | Optimizing ticks without Stream API allocations, `BlockPos.Mutable`, safe chunk access, and atomic config saving. |
 | **[09_CROSS_VERSION_MIGRATION_AND_PORTING](file:///E:/GitHub/AiCreateForMinecraft/09_CROSS_VERSION_MIGRATION_AND_PORTING)** | Checklists for updating mods from 1.20 to 1.21.4 and 1.21 to 26.x (SDL3, `safeProvider`), and native library backporting. Practical multi-version GUI/input porting for 1.21–1.21.11 and 26.x, mixins, client gametests, and porting large feature sets between branches. |
 | **[10_TROUBLESHOOTING_AND_CRASH_CATALOG](file:///E:/GitHub/AiCreateForMinecraft/10_TROUBLESHOOTING_AND_CRASH_CATALOG)** | Breakdown of common runtime crashes with ready-to-use fixes and a 35-step pre-release verification checklist. |
+| **[11_DISTRIBUTION_AND_PUBLISHING](file:///E:/GitHub/AiCreateForMinecraft/11_DISTRIBUTION_AND_PUBLISHING)** | CurseForge publishing: the new Author Console (`authors.curseforge.com/_api`), chunked uploads, version metadata, Selenium + Chrome automation, and getting past Cloudflare. |
 
 ---
 

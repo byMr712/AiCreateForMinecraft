@@ -22,6 +22,7 @@
 | **[08_PERFORMANCE_AND_OPTIMIZATION](file:///E:/GitHub/AiCreateForMinecraft/08_PERFORMANCE_AND_OPTIMIZATION)** | Оптимизация тиков без лишних аллокаций Stream API, `BlockPos.Mutable`, безопасная работа с чанками и атомарные конфиги. |
 | **[09_CROSS_VERSION_MIGRATION_AND_PORTING](file:///E:/GitHub/AiCreateForMinecraft/09_CROSS_VERSION_MIGRATION_AND_PORTING)** | Чек-листы обновления модов с 1.20 на 1.21.4 и с 1.21 на 26.x (SDL3, `safeProvider`), бэкпортирование нативных библиотек. Практический мультиверсионный порт GUI/ввода на 1.21–1.21.11 и 26.x, миксины, client-gametest и перенос крупных наборов фич между ветками. |
 | **[10_TROUBLESHOOTING_AND_CRASH_CATALOG](file:///E:/GitHub/AiCreateForMinecraft/10_TROUBLESHOOTING_AND_CRASH_CATALOG)** | Разбор частых крашей с готовыми решениями и 35-шаговый чек-лист проверки мода перед релизом. |
+| **[11_DISTRIBUTION_AND_PUBLISHING](file:///E:/GitHub/AiCreateForMinecraft/11_DISTRIBUTION_AND_PUBLISHING)** | Публикация на CurseForge: новый Author Console (`authors.curseforge.com/_api`), загрузка чанками, метаданные версий, автоматизация через Selenium + Chrome и обход Cloudflare. |
 
 ---
 

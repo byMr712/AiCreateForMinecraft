@@ -346,3 +346,54 @@ task jarNeoForge(type: Jar) {
 
 > [!NOTE]
 > На NeoForge такой проблемы нет: FML монтирует ресурсы мода сам.
+
+## 13. Текст, обводка, EditBox и многострочные подсказки
+
+Сводка различий, которые ловятся только компиляцией на конкретной ветке:
+
+| Что | 1.21–1.21.10 | 1.21.11+ / 26.x |
+| :--- | :--- | :--- |
+| Текст | `g.drawString(font, s, x, y, color, shadow)` | `g.text(font, s, x, y, color, shadow)` |
+| Обводка | `Paper.outline(g, x, y, w, h, color)` | `g.outline(x, y, w, h, color)` |
+| Поле ввода | `editBox.render(g, mx, my, 0)` | `editBox.extractRenderState(g, mx, my, 0)` |
+| `ResourceKey` | `.location()` | `.identifier()` |
+| Текущий экран | `mc.screen` | `mc.gui.screen()` (с 26.2) |
+| Клик мыши | `mouseClicked(double, double, int)` (до 1.21.8) | `MouseButtonEvent` (с 1.21.9) |
+
+### Многострочные подсказки
+
+`Component` с символом `\n` **не переносится** ванильным тултипом: `\n` рисуется как глиф (в игре выглядит как «LF» или мусорные символы поверх текста). Нужно разбивать строку и передавать список компонентов:
+
+```java
+String tip = tooltip.getString();
+if (tip.indexOf('\n') >= 0) {
+    List<Component> lines = new ArrayList<>();
+    for (String line : tip.split("\n", -1)) {
+        lines.add(Component.literal(line));
+    }
+    // 1.21–1.21.5
+    g.renderComponentTooltip(font, lines, mx, my);
+    // 1.21.6+ и 26.x
+    // g.setComponentTooltipForNextFrame(font, lines, mx, my);
+} else {
+    // 1.21–1.21.5: g.renderTooltip(font, tooltip, mx, my)
+    // 1.21.6+:     g.setTooltipForNextFrame(font, tooltip, mx, my)
+}
+```
+
+### Хитбоксы кастомных иконок
+
+Если иконки рисуются не через общий `hit(...)`, а по своим координатам (например, адаптивная панель, где иконка уже ячейки), нужен **отдельный список хитбоксов** и проверка в `mouseClicked` **до** `super.mouseClicked(...)`:
+
+```java
+if (runToolHits(mx, my, button)) return true;
+if (super.mouseClicked(mx, my, button)) return true;
+```
+
+Важно: компиляция такой регресс **не ловит** — список заполняется, но обработчик не вызывается, и панель «мертва». После любого переноса проверять на каждой ветке наличие самого вызова:
+
+```bash
+grep -n "if (runToolHits(" src/client/java/.../MapScreen.java
+```
+
+На `26.x` левая кнопка мыши = `1` (`InputConstants.MOUSE_BUTTON_LEFT`), на `1.21.x` = `0`, поэтому сравнивать только с константой (`pressButton == InputConstants.MOUSE_BUTTON_LEFT`), а не с числом.
