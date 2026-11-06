@@ -142,7 +142,7 @@ tasks.matching { it.name == 'runClientGameTest' }.configureEach {
 ### 4.1. Полный прогон
 
 ```powershell
-$env:JAVA_HOME = 'C:\Program Files\Java\jdk-25.0.2'   # для 26.x; для 1.21.x — JDK 21
+$env:JAVA_HOME = '<путь к JDK 25>'   # для 1.21.x — JDK 21
 .\gradlew clean build runClientGameTest --console=plain
 ```
 
