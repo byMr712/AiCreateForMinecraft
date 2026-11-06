@@ -89,6 +89,8 @@ public static int lastRegionsPoints;   // сколько точек после �
 
 Gametest: создать N районов по M точек, открыть карту, подождать 10 тиков и прочитать метрики. Проверять **и** «холодный» кадр (bake), **и** установившийся (perFrame) — иначе легко обмануть себя кэшем.
 
+Готовый стресс-тест с этими метриками — `RegionPerfTest` из [09/08_client_gametest_suite.md](../09_CROSS_VERSION_MIGRATION_AND_PORTING/08_client_gametest_suite.md), §6.8.
+
 ## 7. Чек-лист
 
 - [ ] Число draw-call'ов на кадр не зависит от количества объектов.

@@ -87,6 +87,8 @@ int[] spot = ctx.computeOnClient(mc -> {
 });
 ```
 
+Готовый тест с этими проверками — `MarkerHeightTest` из [08_client_gametest_suite.md](08_client_gametest_suite.md), §6.5.
+
 ## 5. Чек-лист
 
 - [ ] Ни одна высота из `getHeight` не используется без `h > level.getMinY()`.

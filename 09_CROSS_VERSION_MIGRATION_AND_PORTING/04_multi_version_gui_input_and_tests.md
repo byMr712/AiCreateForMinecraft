@@ -182,6 +182,8 @@ public class OptionsMixin {
 
 Модуль `fabric-client-gametest-api-v1` входит в Fabric API **начиная с 1.21.5** (и во все 26.x). В 1.21–1.21.4 его нет — там клиентские screenshot-тесты недоступны.
 
+> Полный разбор конкретного набора (8 тестов, 89 функциональных проверок, ввод, высоты, память измерений, стресс районов и диагностика падений) — в [08_client_gametest_suite.md](08_client_gametest_suite.md).
+
 ### 6.2. Подключение
 
 ```groovy
@@ -288,7 +290,7 @@ task jarNeoForge(type: Jar) {
 
 ## 10. Функциональные автотесты механик
 
-Скриншоты проверяют внешний вид, но не логику. Для механик добавлен отдельный `MapMechanicsTest` (Fabric client gametest), который выполняет ~67 проверок:
+Скриншоты проверяют внешний вид, но не логику. Для механик добавлен отдельный `MapMechanicsTest` (Fabric client gametest), который выполняет 89 проверок:
 
 - **Storage:** `sanitize`, `asciiId`, `dimFolder`, JSON round-trip маркера, очистка тестового мира.
 - **Marker:** `copy()`/`apply()`, глубокая копия `screenshots` и `shotDrawings`.
@@ -307,6 +309,8 @@ task jarNeoForge(type: Jar) {
 ```
 
 > На 1.21–1.21.4 клиентского gametest API в Fabric API ещё нет, поэтому механики там проверяются только сборкой.
+
+Остальные тесты набора (`MapClientGameTest`, `ThumbnailShots`, `ListHeaderClickTest`, `MarkerHeightTest`, `ListDimensionTest`, `DimensionMemoryTest`, `RegionPerfTest`) и их типовые падения разобраны в [08_client_gametest_suite.md](08_client_gametest_suite.md).
 
 ## 11. Текстовые поля: паритет с 26.3 на 1.21.x
 
