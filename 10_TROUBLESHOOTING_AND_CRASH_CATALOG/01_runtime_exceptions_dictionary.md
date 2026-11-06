@@ -77,3 +77,34 @@
   1. Переопределить `Property.hasSignature()` через `@Overwrite`: возвращать `signature != null && !signature.isEmpty()`.
   2. Внедрить защитный `@Inject` в `HEAD` метода `validateProperty`: если `property.signature() == null || property.signature().isEmpty()`, сразу возвращать `false` (`cir.setReturnValue(false)`). Для Authlib < 10 миксин вешается на `com.mojang.authlib.yggdrasil.YggdrasilServicesKeyInfo`, а для Authlib >= 10 (Minecraft 26.3+) — на `com.mojang.authlib.services.MinecraftServicesKeyInfo`.
 
+---
+
+## 12. `NullPointerException` в `KeyMapping.compareTo` при открытии «Управления»
+- **Лог:**
+  ```
+  java.lang.NullPointerException: Cannot invoke "java.lang.Integer.compareTo(java.lang.Integer)"
+      because the return value of "java.util.Map.get(Object)" is null
+      at net.minecraft.client.KeyMapping.compareTo(KeyMapping.java:142)
+      at java.util.ComparableTimSort.binarySort(...)
+      at net.minecraft.client.gui.screens.options.controls.KeyBindsScreen.<init>(...)
+  ```
+  Крэш при клике на «Назначения кнопок» / Controls → Key Binds.
+- **Причина:** на `1.21–1.21.8` ваниль сортирует бинды по **приватной** карте порядка категорий `KeyMapping.CATEGORY_SORT_ORDER`, в которой есть только ванильные категории. Модовые категории туда добавляет **Fabric API** при регистрации бинда. Если мод не зависит от Fabric API и добавляет `KeyMapping` напрямую в `Options.keyMappings` (через миксин `Options.load`), категории в карте нет — `get()` возвращает `null`, и `compareTo` падает.
+- **Решение:** добавить свою категорию в карту самому, через accessor-миксин:
+  ```java
+  @Mixin(KeyMapping.class)
+  public interface KeyMappingAccessor {
+      @Accessor("CATEGORY_SORT_ORDER")
+      static Map<String, Integer> getCategorySortOrder() {
+          throw new AssertionError();
+      }
+  }
+  ```
+  и перед созданием биндов:
+  ```java
+  KeyMappingAccessor.getCategorySortOrder().putIfAbsent(CATEGORY, 1000);
+  ```
+  Порядок 1000 просто ставит категорию после ванильных. Делать это нужно **до** открытия экрана (в `Options.load` HEAD, где создаются бинды).
+- **Важно:** на `1.21.9+` и `26.x` категории регистрируются через `KeyMapping.Category.register(Identifier)`, карты порядка нет — фикс не нужен. Проверять наличие поля: `KeyMapping` в 1.21–1.21.8 содержит `CATEGORY_SORT_ORDER`, в 1.21.9+ — нет.
+- **Диагностика:** если краш воспроизводится только с модом без Fabric API — это почти наверняка он; `getCategory()` проблемного бинда подскажет, чья категория не зарегистрирована.
+
