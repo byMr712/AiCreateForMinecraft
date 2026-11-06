@@ -56,6 +56,16 @@ overlay.draw(g, x, y);                             // upload (если был п
 | `blit` | `g.blit(id, x, y, 0f, 0f, w, h, w, h)` | `g.blit(RenderType::guiTextured, id, ...)` | `g.blit(RenderPipelines.GUI_TEXTURED, id, ...)` |
 | тип id | `ResourceLocation` | `ResourceLocation` | `Identifier` (с 1.21.11) |
 
+**Важно про альфу:** на 1.21–1.21.5 простой `g.blit(id, ...)` **не включает blending сам** (в отличие от перегрузки с цветом) — он рисует с тем состоянием, которое осталось после предыдущих вызовов. Если перед этим рисовались тайлы/иконки без `enableBlend`, полупрозрачный оверлей станет **непрозрачным**. Лечится явно:
+
+```java
+RenderSystem.enableBlend();
+RenderSystem.defaultBlendFunc();
+g.blit(id, x, y, 0f, 0f, width, height, width, height);
+```
+
+На 1.21.6+/26.x смешивание задаёт сам пайплайн (`RenderPipelines.GUI_TEXTURED` / `RenderType.guiTextured`), там ничего добавлять не нужно. Симптом на глаз: «районы/полупрозрачные заливки стали плотными» на старых ветках и нормально на новых.
+
 Поэтому `RegionOverlay` — маленький класс, который генерируется/адаптируется скриптом переноса по содержимому `MapTile` ветки (там уже есть все нужные варианты).
 
 ## 5. Цена «запекания» и когда её прятать
