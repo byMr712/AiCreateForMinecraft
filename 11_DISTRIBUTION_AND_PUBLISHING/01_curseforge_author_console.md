@@ -41,7 +41,7 @@ Content-Type: application/json
 ```json
 {
   "fileLength": 756000,
-  "fileName": "MyMod-Fabric-1.21.1-v1.1.jar",
+  "fileName": "MyMod-Fabric-yourname-v1.1.jar",
   "displayName": "MyMod Fabric 1.21.1 v1.1",
   "releaseType": 1,
   "gameVersionIds": [11779, 7499, 9638, 11135],
@@ -144,8 +144,8 @@ fetch('/_api/project-files/123/upload-file-details', {
 
 ## 5. Практика: как это выглядит в скрипте
 
-- Имя файла должно кодировать загрузчик, версию MC и версию мода:
-  `<Mod>-<Loader>-<MC>-v<version>.jar` (`MyMod-Fabric-1.21.1-v1.1.jar`). По этому шаблону скрипт выбирает нужные jar из папки и строит метаданные.
+- Имя файла должно кодировать мод, загрузчик и автора:
+  `<ModName>-<LoaderName>-<AuthorName>-v<version>.jar` (`MyMod-Fabric-yourname-v1.1.jar`). По этому шаблону скрипт выбирает нужные jar из папки и строит метаданные.
 - Перед реальной загрузкой — `--dry-run`: печатает имя файла и итоговые `gameVersionIds`, ничего не отправляя.
 - Полезные фильтры: `--names "a.jar,b.jar"` (точные имена), `--only 26.3` / `--skip NeoForge`, `--limit N`, `--list-versions` (id всех версий проекта).
 - Changelog удобнее держать в отдельном UTF-8 файле и передавать `--changelog-file`, а не экранировать в командной строке.

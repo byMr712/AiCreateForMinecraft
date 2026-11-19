@@ -10,7 +10,7 @@
 > 
 > **Стандарт:**
 > - Внутренняя версия мода (`mod_version`): строго `1.0` или `1.0.0`.
-> - Префикс `v` допустим **только в именах файлов** JAR: `archives_base_name=MyMod-Fabric-1.21.4-v1.0`.
+> - Префикс `v` допустим **только в именах файлов** JAR: `MyMod-Fabric-yourname-v1.0.jar` (шаблон `<ModName>-<LoaderName>-<AuthorName>-v<version>.jar`).
 
 Защитная нормализация в `build.gradle`:
 ```groovy

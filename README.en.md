@@ -65,7 +65,7 @@ Two loaders, one source tree: Fabric and NeoForge are built from the same code, 
 
 1. **Only what has been verified.** Every solution comes from a working mod, not from guesswork.
 2. **State the version.** If an API differs between 1.21.x and 26.x, the difference is written down instead of hiding behind "in newer versions".
-3. **Keep examples neutral.** Mod names, packages, and artifacts are placeholders (`mymod`, `com.example.*`, `<Mod>-<Loader>-<MC>-v<version>.jar`).
+3. **Keep examples neutral.** Mod names, packages, and artifacts are placeholders (`mymod`, `com.example.*`, `<ModName>-<LoaderName>-<AuthorName>-v<version>.jar`).
 4. **Principle first, branch second.** A section explains the mechanism; exact signatures and differences live in section 09 and the version table.
 
 ---

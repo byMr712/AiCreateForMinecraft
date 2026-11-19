@@ -18,7 +18,7 @@ fabric_version=0.119.4+1.21.4
 mod_id=examplemod
 mod_version=1.0.0
 maven_group=com.example.mod
-archives_base_name=ExampleMod-1.21.4
+archives_base_name=ExampleMod-Fabric-yourname
 ```
 
 ---
@@ -104,6 +104,8 @@ java {
     }
 }
 
+def artifactVersion = "v${project.version}"
+
 jar {
     from("LICENSE") {
         rename { "${it}_${project.archives_base_name}" }
@@ -111,7 +113,7 @@ jar {
 }
 
 remapJar {
-    archiveFileName = "${project.archives_base_name}.jar"
+    archiveFileName = "${project.archives_base_name}-${artifactVersion}.jar"
 }
 
 // Отключение генерации лишних jar-файлов

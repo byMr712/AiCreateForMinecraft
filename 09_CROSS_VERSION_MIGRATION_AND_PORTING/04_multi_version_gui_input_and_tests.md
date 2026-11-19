@@ -9,7 +9,7 @@
    - Fabric — `remapJar` (Intermediary) на 1.21.x; `jar` без ремапа на 26.x;
    - NeoForge — `jarNeoForge` (Mojang-байткод + `neoforge.mods.toml`).
 3. **Ноль обязательных зависимостей.** Fabric API/NeoForge-библиотеки не нужны в рантайме: все хуки — обычные Sponge-миксины.
-4. **Версия внутри манифестов — `X.Y` без префикса `v`**, префикс `v` только в имени файла: `AtlasMap-<Loader>-<MC>-v1.0.jar`.
+4. **Версия внутри манифестов — `X.Y` без префикса `v`**, префикс `v` только в имени файла: `MyMod-Fabric-yourname-v1.0.jar`.
 
 ## 2. Java, маппинги и сборка по версиям
 
@@ -237,17 +237,19 @@ tasks.matching { it.name == 'runClientGameTest' }.configureEach {
 Требуемая схема:
 
 ```
-AtlasMap-<Loader>-<MC>-v<version>.jar
-AtlasMap-Fabric-1.21-v1.0.jar
-AtlasMap-NeoForge-26.3-v1.0.jar
+<ModName>-<LoaderName>-<AuthorName>-v<version>.jar
+MyMod-Fabric-yourname-v1.0.jar
+MyMod-NeoForge-yourname-v1.0.jar
 ```
 
 В `gradle.properties`:
 
 ```properties
 mod_version=1.0
-archives_base_name=AtlasMap-Fabric-1.21
+archives_base_name=MyMod-Fabric-yourname
 ```
+
+> Версия Minecraft в имя файла не входит и хранится в `minecraft_version` + манифестах. Если файлы разных веток лежат в одной папке, допускается `MyMod-Fabric-1.21-yourname` — загрузчик и автор остаются на своих местах.
 
 В `build.gradle`:
 

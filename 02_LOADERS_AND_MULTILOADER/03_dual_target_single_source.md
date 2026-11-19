@@ -180,18 +180,22 @@ remapJar {
 
 ## 5. Имена артефактов
 
-Загрузчик и версия Minecraft держатся в `archives_base_name`, а `jarNeoForge` меняет только токен загрузчика:
+Загрузчик и автор держатся в `archives_base_name`, а `jarNeoForge` меняет только токен загрузчика:
 
 ```properties
 # gradle.properties
-archives_base_name=ExampleMod-Fabric-26.2
+archives_base_name=ExampleMod-Fabric-yourname
 mod_version=1.1.1
 ```
 
 ```
-ExampleMod-Fabric-26.2-v1.1.1.jar
-ExampleMod-NeoForge-26.2-v1.1.1.jar
+ExampleMod-Fabric-yourname-v1.1.1.jar
+ExampleMod-NeoForge-yourname-v1.1.1.jar
 ```
+
+Канонический шаблон имени: `<ModName>-<LoaderName>-<AuthorName>-v<version>.jar`.
+
+Версия Minecraft в имя файла не входит: она фиксируется в `minecraft_version` и манифестах. Если нужно различать файлы разных веток в одной папке, добавьте MC в `archives_base_name` (`ExampleMod-Fabric-26.2-yourname`) — `jarNeoForge` по-прежнему заменит только `-Fabric-` на `-NeoForge-`.
 
 Внутри `fabric.mod.json` и `neoforge.mods.toml` версия остаётся без префикса `v` (`1.1.1`).
 
@@ -252,10 +256,10 @@ public class LoaderHelper {
 ls build/libs
 
 # 2. Fabric JAR
-jar tf build/libs/ExampleMod-Fabric-26.2-v1.1.1.jar | grep -E "fabric.mod.json|neoforge.mods.toml|^net/|^icon.png"
+jar tf build/libs/ExampleMod-Fabric-yourname-v1.1.1.jar | grep -E "fabric.mod.json|neoforge.mods.toml|^net/|^icon.png"
 
 # 3. NeoForge JAR
-jar tf build/libs/ExampleMod-NeoForge-26.2-v1.1.1.jar | grep -E "fabric.mod.json|neoforge.mods.toml|^net/|^icon.png|MyModClient.class|MyModNeoForge.class"
+jar tf build/libs/ExampleMod-NeoForge-yourname-v1.1.1.jar | grep -E "fabric.mod.json|neoforge.mods.toml|^net/|^icon.png|MyModClient.class|MyModNeoForge.class"
 ```
 
 Ожидаемый результат:
