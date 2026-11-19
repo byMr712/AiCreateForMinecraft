@@ -10,7 +10,7 @@
 > 
 > **Стандарт:**
 > - Внутренняя версия мода (`mod_version`): строго `1.0` или `1.0.0`.
-> - Префикс `v` допустим **только в именах файлов** JAR: `archives_base_name=MyMod-Fabric-1.21.4-byMr712-v1.0`.
+> - Префикс `v` допустим **только в именах файлов** JAR: `archives_base_name=MyMod-Fabric-1.21.4-v1.0`.
 
 Защитная нормализация в `build.gradle`:
 ```groovy
@@ -29,21 +29,21 @@ def cleanVersion = project.mod_version.toString().replaceFirst(/^v/, '')
   "name": "Example Mod",
   "description": "Excellence in Minecraft Modding.",
   "authors": [
-    "Mr712"
+    "Your Name"
   ],
   "contact": {
-    "sources": "https://github.com/byMr712/ExampleMod-MinecraftMod",
-    "issues": "https://github.com/byMr712/ExampleMod-MinecraftMod/issues"
+    "sources": "https://github.com/yourname/ExampleMod-MinecraftMod",
+    "issues": "https://github.com/yourname/ExampleMod-MinecraftMod/issues"
   },
   "license": "Apache-2.0",
   "icon": "assets/examplemod/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
-      "com.mr712.examplemod.ExampleMod"
+      "com.example.examplemod.ExampleMod"
     ],
     "client": [
-      "com.mr712.examplemod.client.ExampleModClient"
+      "com.example.examplemod.client.ExampleModClient"
     ]
   },
   "mixins": [
@@ -71,17 +71,17 @@ def cleanVersion = project.mod_version.toString().replaceFirst(/^v/, '')
 modLoader="javafml"
 loaderVersion="[1,)"
 license="Apache-2.0"
-issueTrackerURL="https://github.com/byMr712/ExampleMod-MinecraftMod/issues"
+issueTrackerURL="https://github.com/yourname/ExampleMod-MinecraftMod/issues"
 
 [[mods]]
 modId="examplemod"
 version="${version}"
-displayName="[MR] Example Mod"
+displayName="Example Mod"
 description='''
 Excellence in Minecraft Modding.
 '''
 logoFile="icon.png"
-displayURL="https://github.com/byMr712/ExampleMod-MinecraftMod"
+displayURL="https://github.com/yourname/ExampleMod-MinecraftMod"
 
 [[dependencies.examplemod]]
 modId="neoforge"

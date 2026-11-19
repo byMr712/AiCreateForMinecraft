@@ -18,12 +18,17 @@ fabric_version=0.119.4+1.21.4
 mod_id=examplemod
 mod_version=1.0.0
 maven_group=com.example.mod
-archives_base_name=ExampleMod-1.21.4-byMr712
+archives_base_name=ExampleMod-1.21.4
 ```
 
 ---
 
 ## 2. Скрипт сборщика `build.gradle` (Fabric Loom для 1.21.4)
+
+> [!NOTE]
+> Этот шаблон — для 1.21.4 / Loom 1.10.1, где существует задача `remapJar`.
+> Для Minecraft 26.x / Loom 1.17 задача `remapJar` отсутствует: Fabric-артефакт собирает `jar`.
+> Двойная сборка Fabric + NeoForge описана в [03_dual_target_single_source.md](../02_LOADERS_AND_MULTILOADER/03_dual_target_single_source.md).
 
 ```groovy
 plugins {

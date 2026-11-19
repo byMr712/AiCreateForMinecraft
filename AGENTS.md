@@ -14,8 +14,8 @@
 3. **Чистота и детерминированность версий:**
    - Внутри мода (`gradle.properties`, манифесты `fabric.mod.json`, `neoforge.mods.toml`) версия стандартизирована строго в формате SemVer без префикса `v` (например, `1.0.0` или `1.1`).
    - Префикс `v` разрешен только в финальных именах файлов (`-v1.1.jar`).
-4. **Стандарт одиночного артефакта (Single Output):**
-   - При сборке мода создается только чистый готовый к установке JAR. Лишние таски (`sourcesJar`, `javadocJar`) отключаются.
+4. **Один артефакт на загрузчик (Single Output per Loader):**
+   - На каждый поддерживаемый загрузчик собирается один чистый готовый к установке JAR (Fabric и NeoForge отдельно). Лишние таски (`sourcesJar`, `javadocJar`) отключаются.
 
 ---
 
@@ -28,7 +28,7 @@
 - **EntityRenderState:** Рендеринг сущностей переведен на состояние `RenderState` (например `BipedEntityRenderState`).
 
 ### Minecraft 26.x:
-- **Java 25 LTS:** Требуется компилятор и рантайм Java 25. При сборке через Fabric Loom 1.18+ переменная окружения `JAVA_HOME` обязана указывать на JDK 25.
+- **Java 25 LTS:** Требуется компилятор и рантайм Java 25. При сборке через Fabric Loom 1.17+ переменная окружения `JAVA_HOME` обязана указывать на JDK 25.
 - **SDL3 Модель ввода:** Кнопки мыши 1-based (`InputConstants.MOUSE_BUTTON_LEFT = 1`, `RIGHT = 3`, `MIDDLE = 2`).
 - **Title Screen Registry Guard:** Инициализаторы компонентов предметов (`BuiltInRegistries.DATA_COMPONENT_INITIALIZERS.build()`) требуют защитную обертку `safeProvider` при открытии GUI из главного меню.
 - **Authlib 10.x:** `YggdrasilServicesKeyInfo` удалён и заменён на `com.mojang.authlib.services.MinecraftServicesKeyInfo`. Переход по URL выполняется через `Blaze3D.openUri`.

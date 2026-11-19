@@ -13,7 +13,7 @@ In this repository, I have gathered my solutions, code templates, and notes for 
 | Section | Description |
 | :--- | :--- |
 | **[01_FOUNDATIONS](01_FOUNDATIONS)** | Java versions (21/25), bytecode targets, template `build.gradle`, `gradle.properties`, SemVer `X.X` format (no `v` prefix), and manifests. |
-| **[02_LOADERS_AND_MULTILOADER](02_LOADERS_AND_MULTILOADER)** | Fabric, NeoForge, my Dual-Target build setup (two JARs from one codebase via Loom without subprojects), Architectury, and localization without Fabric API (key binding translations via `Language`). |
+| **[02_LOADERS_AND_MULTILOADER](02_LOADERS_AND_MULTILOADER)** | Fabric, NeoForge, the Dual-Target Single-Source setup (two JARs from one codebase via Loom without subprojects), Architectury, and localization without Fabric API (key binding translations via `Language`). |
 | **[03_CORE_GAMEPLAY_DEVELOPMENT](03_CORE_GAMEPLAY_DEVELOPMENT)** | Items with `.registryKey()`, Data Components, Client Item Definitions, blocks, render layers, 1.21+ recipe schemas, and GUI screens. |
 | **[04_ENTITIES_MOBS_AND_ANIMATIONS](04_ENTITIES_MOBS_AND_ANIMATIONS)** | Entity creation, AI goals, water physics, Server-Side Fake Players, GeckoLib integration, animations, and sounds. |
 | **[05_WORLDGEN_AND_STRUCTURES](05_WORLDGEN_AND_STRUCTURES)** | Worldgen schemas, custom structures (`structure/` folder, mandatory GZIP NBT compression `1F 8B`), and schematic conversion. |

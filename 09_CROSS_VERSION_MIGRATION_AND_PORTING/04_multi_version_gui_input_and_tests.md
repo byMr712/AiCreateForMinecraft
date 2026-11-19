@@ -6,7 +6,7 @@
 
 1. **Одна ветка = одна версия Minecraft.** Имя ветки совпадает с версией (`1.21`, `1.21.4`, `26.3`).
 2. **Dual-Target Single-Source:** общий код на официальных маппингах Mojang, два артефакта из одного дерева:
-   - Fabric — `remapJar`/`jar` (Intermediary);
+   - Fabric — `remapJar` (Intermediary) на 1.21.x; `jar` без ремапа на 26.x;
    - NeoForge — `jarNeoForge` (Mojang-байткод + `neoforge.mods.toml`).
 3. **Ноль обязательных зависимостей.** Fabric API/NeoForge-библиотеки не нужны в рантайме: все хуки — обычные Sponge-миксины.
 4. **Версия внутри манифестов — `X.Y` без префикса `v`**, префикс `v` только в имени файла: `AtlasMap-<Loader>-<MC>-v1.0.jar`.
@@ -258,8 +258,8 @@ jar {
     archiveFileName = "${project.archives_base_name}-${artifactVersion}.jar"
 }
 
-// Loom 1.17 не имеет метода remapJar(), Loom 1.18 — имеет.
-// tasks.matching безопасно настраивает задачу, если она существует.
+// В Loom 1.17 (Minecraft 26.x) задачи remapJar нет: Fabric-артефакт собирает jar.
+// В Loom 1.18 задача может присутствовать; tasks.matching настраивает её только если она есть.
 tasks.matching { it.name == 'remapJar' }.configureEach {
     archiveFileName = "${project.archives_base_name}-${artifactVersion}.jar"
 }
