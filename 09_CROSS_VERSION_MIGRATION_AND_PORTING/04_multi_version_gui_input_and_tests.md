@@ -228,6 +228,9 @@ dependencies {
 | 26.1+ | `sp.getClientLevel().waitForChunksRender()` | `mc.resizeGui()` | `int` |
 | 1.21.5 | `sp.getClientWorld().waitForChunksRender()` | `mc.resizeDisplay()` | `double` (нужен `(int)`) |
 
+> [!NOTE]
+> В creative `Minecraft` заменяет `InventoryScreen` на `CreativeModeInventoryScreen`. Если оверлей мода поддерживает только `InventoryScreen`/`CraftingScreen`, в creative-инвентаре он не откроется. Для creative-скриншотов открывайте `CraftingScreen` (верстак) — колесо/панель работают и в творческом режиме, а предметы можно выдать через серверный `CommandSourceStack`, не полагаясь на права игрока.
+
 ### 6.4. Network synchronizer
 
 На 1.21.6+ тест может упасть с:
