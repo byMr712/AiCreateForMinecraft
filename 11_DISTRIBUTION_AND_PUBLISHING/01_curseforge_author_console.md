@@ -116,8 +116,15 @@ GET /_api/project-files/{projectId}/create-project-file-form-data?gameId={gameId
 | `status` | Значение |
 | :---: | :--- |
 | `19` | Processing — файл готовится (хэш/скан), обычно минуты |
-| `3` | Pending Approval — ждёт одобрения проекта/файла |
+| `3` | **Under Review** — ждёт проверки/одобрения |
 | `4` | Approved — опубликован |
+| `7` | Deleted — удалён (остаётся в истории и в API-списке) |
+| `8` | Archived — в архиве |
+| `2` | Changes Required |
+| `5` | Rejected |
+| `6` | Malware Detected |
+| `9` | Testing |
+| `10` | Released |
 
 `GET /_api/project-files/{projectId}/get-statuses` возвращает **доступные** статусы проекта (`[3]` у нового, `[4,5,7]` у одобренного), а не их имена — не пытайтесь построить по нему словарь.
 
@@ -133,6 +140,21 @@ GET /_api/project-files?filter={"projectId":"<id>"}&range=[0,100]&sort=["DateCre
 - `PUT /_api/project-files/{projectId}/files/{fileId}` — обновить файл (display name, changelog, версии) без повторной загрузки. Полезно, чтобы поправить changelog уже загруженного файла.
 - `DELETE /_api/project-files/{projectId}/files/{fileId}` — удалить.
 - `PUT /_api/project-files/{projectId}/files/{fileId}/publish-pending` — опубликовать ожидающий файл.
+
+### Удаление файлов, которые ещё Under Review
+
+`DELETE /_api/project-files/{projectId}/files/{fileId}` на файле со статусом `3` возвращает `{"success":"true"}`, но **ничего не делает** — статус остаётся `3`. Bulk-запрос с `{"fileIds":[...],"type":"delete"}` отвечает `400 {"statusCode":400,"message":"undefined (undefined)"}`.
+
+Рабочая последовательность:
+
+1. `POST /_api/project-files/{projectId}/files/bulk-action`
+   с `{"fileIds":[id...],"type":"archive"}` → `201 {"success":"true"}`. Архивация асинхронная.
+2. Подождать, пока `GET .../files/{fileId}` не вернёт `status: 8` (Archived). Обычно 10–20 секунд на файл; для партии из 34 — до нескольких минут. Полезно опрашивать детали, а не список: список может отдавать закэшированные статусы.
+3. `DELETE .../files/{fileId}` → `200 {"success":"true"}`, статус становится **7 (Deleted)**.
+4. Удалённые файлы остаются в API-списке со статусом `7`, но UI их скрывает. Для проверки «активных» считайте только `status != 7`.
+
+> [!NOTE]
+> `DELETE` без заголовка `Accept: application/json` тоже может вернуть `{"success":"true"}` и не применить изменение. Добавляйте `Accept: application/json` (как это делает консольный `NO`-обёртка).
 
 **Новый проект:** файлы можно загружать до одобрения, но они не публичны и не синхронизируются; на странице висит «This is a new project...». После одобрения `3 → 4`. Отсутствие файла на публичной странице при статусе `3` — не ошибка загрузки.
 
@@ -204,5 +226,6 @@ fetch('/_api/project-files/123/upload-file-details', {
 - [ ] `chunkIndex` начинается с 1, `totalChunks` совпадает.
 - [ ] При `429` — ретрай, а не пропуск файла.
 - [ ] Файлы с одинаковым именем и хэшем не заливать повторно.
-- [ ] После партии список с `range=[0,100]` содержит все файлы; статусы `19`/`3` — это Processing/Pending Approval, не ошибка.
+- [ ] После партии список с `range=[0,100]` содержит все файлы; статусы `19`/`3` — это Processing/Under Review, не ошибка.
 - [ ] Для нового проекта: файлы загружены, но публичны только после одобрения проекта (статус `4`).
+- [ ] Если старые файлы нужно удалить до одобрения: сначала `bulk-action` → archive, дождаться статуса `8`, затем `DELETE` → статус `7`; прямой `DELETE` по статусу `3` не работает.
