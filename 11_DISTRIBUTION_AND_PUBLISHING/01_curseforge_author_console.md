@@ -31,6 +31,8 @@ GET /_api/project-files/{projectId}/get-game-versions
 
 В списке смешаны категории: версия Minecraft, загрузчик (`fabric`, `neoforge`), окружение (`client`), Java (`java 21`, `java 25`). В `gameVersionIds` нужно отправлять **числовые value**, а не имена.
 
+> Если ответ пуст (новый/неодобренный проект) — это не ошибка сессии; версии берутся из `create-project-file-form-data`, см. раздел «Новый проект» ниже.
+
 ### Шаг 2. Создать запись файла и получить `uploadId`
 
 ```
@@ -91,6 +93,50 @@ Content-Type: multipart/form-data
 ### Дубликаты
 
 CurseForge не принимает файл с тем же SHA-256. Если файл удалён в консоли, а хэш остался в истории проекта, помогает пересборка: `clean build` меняет таймстемпы внутри jar → новый хэш.
+
+### Новый проект: `get-game-versions` может быть пустым
+
+> [!IMPORTANT]
+> У нового/ещё не одобренного проекта `GET /_api/project-files/{projectId}/get-game-versions` возвращает `[]`. Это не ошибка сессии и не повод падать: форма **Add File** в самой консоли берёт версии из другого запроса.
+
+Рабочий источник — тот же, что у диалога Add File:
+
+```
+GET /_api/projects/{projectId}
+  → gameId, classId (для Minecraft Mods: 432 / 6)
+
+GET /_api/project-files/{projectId}/create-project-file-form-data?gameId={gameId}&classId={classId}
+  → { versionsData: [ [ { name, choices: [{id, name}, ...] } ], ... ] }
+```
+
+Соберите `name.lower() -> choice.id` по всем группам. В `versionsData` лежат Environment (`Client`/`Server`), Modloader (`Fabric`/`NeoForge`), Java (`Java 21`/`Java 25`) и все версии Minecraft. Только если и этот ответ пуст — сообщайте об ошибке. Для старого проекта можно оставить `get-game-versions` как быстрый путь, для нового — сразу form-data.
+
+### Статусы, список и правка файлов
+
+| `status` | Значение |
+| :---: | :--- |
+| `19` | Processing — файл готовится (хэш/скан), обычно минуты |
+| `3` | Pending Approval — ждёт одобрения проекта/файла |
+| `4` | Approved — опубликован |
+
+`GET /_api/project-files/{projectId}/get-statuses` возвращает **доступные** статусы проекта (`[3]` у нового, `[4,5,7]` у одобренного), а не их имена — не пытайтесь построить по нему словарь.
+
+Список файлов:
+
+```
+GET /_api/project-files?filter={"projectId":"<id>"}&range=[0,100]&sort=["DateCreated","DESC"]
+```
+
+- `/_api/project-files/{projectId}/files` даёт `404` — это не тот маршрут.
+- `range=[0,30]` — это **31** элемент, а не 30; для проверки «все ли 34 файла на месте» берите `[0,100]`, иначе три самых старых файла просто не попадут в вывод и вы решите, что загрузка потерялась.
+- `GET /_api/project-files/{projectId}/files/{fileId}` — детали файла: `changelog` (при `changelogType = 1` — готовый HTML, при `5` — исходный markdown), `gameVersions`, `status`.
+- `PUT /_api/project-files/{projectId}/files/{fileId}` — обновить файл (display name, changelog, версии) без повторной загрузки. Полезно, чтобы поправить changelog уже загруженного файла.
+- `DELETE /_api/project-files/{projectId}/files/{fileId}` — удалить.
+- `PUT /_api/project-files/{projectId}/files/{fileId}/publish-pending` — опубликовать ожидающий файл.
+
+**Новый проект:** файлы можно загружать до одобрения, но они не публичны и не синхронизируются; на странице висит «This is a new project...». После одобрения `3 → 4`. Отсутствие файла на публичной странице при статусе `3` — не ошибка загрузки.
+
+**Проверка партии:** после массовой загрузки запросите список с `range=[0,100]` и сверьте количество с количеством JAR в папке (например, 34 = 17 версий × 2 загрузчика). Файл в `19` — ещё обрабатывается, это нормально; повторите проверку через минуту.
 
 ## 4. Автоматизация через Selenium + Chrome
 
@@ -153,8 +199,10 @@ fetch('/_api/project-files/123/upload-file-details', {
 ## 6. Чек-лист
 
 - [ ] Сессия жива: `/_api/project-members/project-titles` → `200 application/json`.
-- [ ] `get-game-versions` вернул непустой список.
+- [ ] Версии игры получены: `get-game-versions` **или** `create-project-file-form-data` для нового проекта.
 - [ ] В `gameVersionIds` есть версия MC, загрузчик, `client` и Java.
 - [ ] `chunkIndex` начинается с 1, `totalChunks` совпадает.
 - [ ] При `429` — ретрай, а не пропуск файла.
 - [ ] Файлы с одинаковым именем и хэшем не заливать повторно.
+- [ ] После партии список с `range=[0,100]` содержит все файлы; статусы `19`/`3` — это Processing/Pending Approval, не ошибка.
+- [ ] Для нового проекта: файлы загружены, но публичны только после одобрения проекта (статус `4`).

@@ -161,3 +161,48 @@ private boolean matchShapelessBacktrack(List<ItemStack> inputs, List<Ingredient>
     return false;
 }
 ```
+
+---
+
+## 5. Чтение всех рецептов на клиенте (без Fabric API и без сервера)
+
+Клиентский GUI «все рецепты» не может рассчитывать на `RecipeManager` сервера: в мультиплеере сервер присылает не весь каталог, а модовые/пользовательские датапаки могут быть не синхронизированы. Рабочая схема:
+
+1. **Одиночная игра** — берите рецепты у интегрированного сервера:
+   ```java
+   mc.getSingleplayerServer().getRecipeManager().getRecipes()
+   ```
+2. **Мультиплеер** — читайте `recipe/*.json` из всех выбранных клиентских датапаков:
+   ```java
+   RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, mc.level.registryAccess());
+   Codec<Recipe<?>> codec = Recipe.DIRECT_CODEC;
+   Set<ResourceLocation> seen = new HashSet<>();
+   for (PackResources pack : mc.getResourcePackRepository().openAllSelected()) {
+       try (pack) {
+           for (String ns : pack.getNamespaces(PackType.SERVER_DATA)) {
+               pack.listResources(PackType.SERVER_DATA, ns, "recipe", (id, supplier) -> {
+                   if (!seen.add(id)) return;          // верхний пак перекрывает нижний
+                   try (InputStream in = supplier.get()) {
+                       codec.parse(ops, JsonParser.parseReader(new InputStreamReader(in, UTF_8)))
+                            .ifSuccess(r -> add(r));   // один битый рецепт не должен ронять остальные
+                   } catch (Exception ignored) {
+                       // пропускаем только этот файл
+                   }
+               });
+           }
+       }
+   }
+   ```
+
+Практические ловушки:
+
+- **Путь с завершающим слэшем.** У `ResourceManager.listResources("recipe", ...)` путь должен быть `"recipe/"`, иначе список пуст и ошибка тихая. У `PackResources.listResources(PackType, namespace, "recipe", ...)` — наоборот, без слэша.
+- **Дедупликация по `ResourceLocation`.** `openAllSelected()` возвращает паки от верхнего к нижнему; один id может встретиться несколько раз, нужен первый (верхний).
+- **`RegistryOps` обязателен.** Без `mc.level.registryAccess()` теги и предметы в рецепте не разрешатся; `Recipe.DIRECT_CODEC` парсит только с ним.
+- **Один битый рецепт не должен скрывать остальные.** `ifSuccess`/`try-catch` на каждый файл, а не на весь цикл.
+- **Кэш.** Каталог зависит от `mc.getConnection()`; при смене мира/сервера сбрасывайте его.
+
+> [!WARNING]
+> На **1.21.2/1.21.3** `ShapedCraftingRecipeDisplay` ещё не имеет `slotsToIngredientIndex()`, поэтому кастомный shaped-рецепт нельзя восстановить только из `RecipeDisplay`. Такие рецепты берите из `RecipeManager` (одиночная игра) или из книги рецептов — иначе в колесе они появятся только после разблокировки. В 1.21.4+ карта слотов доступна.
+
+Проверка: в одиночной и мультиплеерной игре каталог не пуст; добавьте тестовый рецепт в клиентский датапак и убедитесь, что он появился в списке.

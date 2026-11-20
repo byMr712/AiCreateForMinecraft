@@ -67,6 +67,10 @@ g.blit(pipeline, tex, x, y, 0, 0, size, size, 16, 16, 16, 16);
 
 Для 9-арг/10-арг перегрузки без `uWidth/vHeight` (тайлинг, `drawTiles`) порядок одинаковый: `(x, y, u, v, width, height, texW, texH)`.
 
+> [!CAUTION]
+> На 1.21/1.21.1 9-арг перегрузка `blit(id, x, y, width, height, u, v, texW, texH)` использует `width/height` ещё и как размер **источника**. Для текстуры больше 16×16 (например, 252×252 сектор колеса) это обрезает картинку до размеров destination. Нужна 11-арг перегрузка с явными `uWidth/vHeight`:
+> `g.blit(tex, x, y, w, h, 0, 0, w, h, texW, texH)`. Симптом: вместо целого сектора рисуется его верхний левый угол, растянутый/обрезанный.
+
 ### Оверлеи и слои GUI (`nextStratum` / `flush`)
 
 В 1.21.x GUI-отрисовка батчится, и `renderOutline`/`submitOutline`, а также отложенный текст могут попасть в отдельный слой. Из-за этого при открытии модального оверлея (например, выбора скриншотов) поверх него остаются тонкие контуры и текст предыдущего меню.
@@ -193,6 +197,24 @@ public class OptionsMixin {
 
 `Options.load()` вызывается в конце конструктора `Options`, поэтому клавиши успевают попасть в список до применения сохранённых биндов и до экрана управления.
 
+### Кастомная категория клавиш: скрытый краш Controls (1.21–1.21.8)
+
+На 1.21–1.21.8 `KeyMapping.compareTo` сортирует бинды по `CATEGORY_SORT_ORDER.get(category)`, где `category` — строка. Если категории мода нет в этой `private static` карте, `get` возвращает `null`, а распаковка в `int` бросает NPE при открытии **Controls**. Компиляция и регистрация клавиши этого не показывают.
+
+```java
+@Mixin(KeyMapping.class)
+public class KeyMappingCategoryMixin {
+    @Shadow @Final private static Map<String, Integer> CATEGORY_SORT_ORDER;
+
+    @Inject(method = "<clinit>", at = @At("TAIL"))
+    private static void mod$addCategory(CallbackInfo ci) {
+        CATEGORY_SORT_ORDER.put("key.category.mymod.main", 8);
+    }
+}
+```
+
+На 1.21.9+ и 26.x вместо строки используется `KeyMapping.Category.register(Identifier)`, и эта карта не нужна; миксин оставляйте только на 1.21–1.21.8. Индекс `8` — после ванильных категорий, он влияет только на порядок в Controls. Проверка: открыть Controls на каждой ветке 1.21–1.21.8 — экран не должен падать.
+
 ## 6. Автотесты (Fabric Client GameTest)
 
 ### 6.1. Когда доступны
@@ -229,7 +251,7 @@ dependencies {
 | 1.21.5 | `sp.getClientWorld().waitForChunksRender()` | `mc.resizeDisplay()` | `double` (нужен `(int)`) |
 
 > [!NOTE]
-> В creative `Minecraft` заменяет `InventoryScreen` на `CreativeModeInventoryScreen`. Если оверлей мода поддерживает только `InventoryScreen`/`CraftingScreen`, в creative-инвентаре он не откроется. Для creative-скриншотов открывайте `CraftingScreen` (верстак) — колесо/панель работают и в творческом режиме, а предметы можно выдать через серверный `CommandSourceStack`, не полагаясь на права игрока.
+> В creative `Minecraft` заменяет `InventoryScreen` на `CreativeModeInventoryScreen`. Если оверлей мода поддерживает только `InventoryScreen`/`CraftingScreen`, в creative-инвентаре он не откроется. Для creative-скриншотов открывайте `CraftingScreen` (верстак) — колесо/панель работают и в творческом режиме, а предметы можно выдать через серверный `CommandSourceStack`, не полагаясь на права игрока. Если нужен именно creative-экран, добавьте его в список поддерживаемых; клики над вкладками разобраны в §14.6.
 
 > [!NOTE]
 > **Модальное колесо и панель.** Пока колесо открыто, клики должны обрабатываться колёсиком **до** `Panel.click`, а панель с шестерёнкой/очередью не должна рисоваться поверх колеса. Иначе фиксированная панель шириной 176 GUI px в маленьком окне перекрывает колесо и перехватывает Alt+ПКМ по слотам под ней — колесо «не открывается». Проверка: окно 640×480, открытая панель настроек, Alt+ПКМ по слоту → `wheel != null`.
@@ -238,7 +260,7 @@ dependencies {
 > **Alt + ПКМ на Windows ненадёжен.** При удержании Alt окно Minecraft может потерять фокус/состояние Alt. В момент клика `Screen.hasAltDown()` или `MouseButtonEvent.hasAltDown()` возвращает `false`, мод не открывает колесо, а ванильный right-click делит стак пополам (у автора оригинала та же проблема). Это не зависит от разрешения, окна и GUI scale. Основной триггер — **Ctrl + ПКМ**: Ctrl не теряет состояние при смене фокуса, в отличие от Alt, а имя клавиши совпадает с оригинальным (`key.beezzcraft.wheel`; по умолчанию Left Ctrl). Клавиша-модификатор — vanilla `KeyMapping` (`key.beezzcraft.wheel`) с категорией `beezzcraft:beezz_craft_extended`; она добавляется в `Options.keyMappings` через `OptionsMixin` + `OptionsAccessor`, поэтому видна в Controls и сохраняется в options.txt. На 1.21–1.21.8 категория — строка, на 1.21.9–1.21.10 — `ResourceLocation`, на 1.21.11+ — `Identifier`; на 26.3 конструктор `KeyMapping` без `InputConstants.Type`. На 26.3 `KeyboardHandler.keyPress` при открытом экране может выйти до `KeyMapping.set`, поэтому `KeyMapping.isDown()` для модификатора ненадёжен: читайте `key` через `@Accessor` и опрашивайте `InputConstants.isKeyDown(...)` напрямую.
 
 > [!NOTE]
-> **Mod Menu (26.3 Fabric).** Подключается опционально через entrypoint `modmenu` и `compileOnly com.terraformersmc:modmenu:21.0.1`; в NeoForge JAR классы `ModMenuIntegration`/`BeezzCraftConfigScreen*` исключаются. Экран настроек — `OptionsSubScreen` + `OptionsList`; клавиша — обычный `KeyMapping`, добавленный в `Options.keyMappings`. Локализацию самого экрана берите из `Tr` (не `Component.translatable`: ресурс-пак мода может не подхватиться), а для vanilla Controls добавьте `LanguageMixin` → `Language.getOrDefault(String)`. Многострочные подсказки без `\n`: список `FormattedCharSequence` из отдельных `Component.getVisualOrderText()` и `GuiGraphicsExtractor.setTooltipForNextFrame(...)`.
+> **Mod Menu (26.3 Fabric).** Подключается опционально через entrypoint `modmenu` и `compileOnly com.terraformersmc:modmenu:21.0.1`; в NeoForge JAR классы `ModMenuIntegration`/`BeezzCraftConfigScreen*` исключаются. Экран настроек — обычный `Screen` с кнопками и временной копией конфига (см. §15); `OptionsSubScreen` + `OptionsList` нужны только при скролле. Клавиша — обычный `KeyMapping`, добавленный в `Options.keyMappings`. Локализацию самого экрана берите из `Tr` (не `Component.translatable`: ресурс-пак мода может не подхватиться), а для vanilla Controls добавьте `LanguageMixin` → `Language.getOrDefault(String)`. Многострочные подсказки без `\n`: список `FormattedCharSequence` из отдельных `Component.getVisualOrderText()` и `GuiGraphicsExtractor.setTooltipForNextFrame(...)`.
 
 ### 6.4. Network synchronizer
 
@@ -559,3 +581,178 @@ private List<Marker> sortedMarkers(String query) {
 2. **Высота группы должна считаться той же функцией, что и отрисовка**, иначе `maxScroll` и ползунок врут, а последняя группа обрезается.
 3. **Заголовки групп тоже обрезать по видимой области** (`top`/`bottom`), как и строки: при прокрутке «съехавший» заголовок иначе продолжает ловить клики.
 4. Строка чужого измерения в сгруппированном списке не должна повторять название измерения — оно уже в заголовке группы.
+
+## 14. Оверлей поверх ванильных экранов: приоритет кликов, скролл и слои
+
+> Проверено на клиентском моде с колесом/панелью, которые рисуются поверх инвентаря, верстака и творческого инвентаря. Симптомы проявляются только в игре: компиляция и обычный тест на инвентаре их не ловят.
+
+### 14.1. `AbstractContainerScreen.mouseClicked` — не первая точка ввода
+
+Миксин на `AbstractContainerScreen.mouseClicked` (HEAD) получает клик только тогда, когда подкласс вызвал `super`. Часть кликов подклассы забирают **до** `super`:
+
+| Экран | Что съедает клик до `super` |
+| :--- | :--- |
+| `CreativeModeInventoryScreen` | вкладки творческого инвентаря (`checkTabClicked`) и скроллбар |
+| `AbstractRecipeBookScreen` (1.21.2+) | `recipeBookComponent.mouseClicked(...)` — кнопки книги, стрелки, поиск; при `widthTooNarrow && book.isVisible()` возвращает `true` на **любой** клик |
+| `InventoryScreen` / `CraftingScreen` на 1.21/1.21.1 | свои кнопки книги рецептов |
+
+Следствие: строка панели, оказавшаяся над вкладкой или книгой, «не кликается» — клик забирает ванильный элемент. Решение — дать оверлею первый шанс в **начале** `mouseClicked` конкретных подклассов, а не только в `AbstractContainerScreen`:
+
+| Версия | Цели раннего миксина | Сигнатура |
+| :--- | :--- | :--- |
+| 1.21–1.21.8 | `InventoryScreen`, `CraftingScreen` (1.21/1.21.1), `AbstractRecipeBookScreen` (1.21.2+), `CreativeModeInventoryScreen` | `mouseClicked(double, double, int)` |
+| 1.21.9+ / 26.x | `AbstractRecipeBookScreen`, `CreativeModeInventoryScreen` | `mouseClicked(MouseButtonEvent, boolean)` |
+
+В обработчике: сначала `captureMouse(button)` (если панель ждёт кнопку мыши), затем `overlay.mouse(...)`; если оверлей обработал — `cir.setReturnValue(false)`. Базовый миксин на `AbstractContainerScreen` оставить: он нужен для сундуков, печей и других экранов без своего `mouseClicked`.
+
+`@Mixin({A.class, B.class})` с одним обработчиком работает, если сигнатура метода есть у всех целей. На 1.21/1.21.1 `AbstractRecipeBookScreen` ещё не существует — там цели `InventoryScreen`, `CraftingScreen`, `CreativeModeInventoryScreen`. `CreativeModeInventoryScreen` не наследует `InventoryScreen`, поэтому проверка «только `InventoryScreen`/`CraftingScreen`» означает «в креативе оверлей не откроется».
+
+### 14.2. Скролл на 1.21/1.21.1
+
+`AbstractContainerScreen.mouseScrolled(...)` появился только в 1.21.2. На 1.21/1.21.1 его нет ни у `Screen`, ни у `AbstractContainerScreen` (есть только default-метод `GuiEventListener`, который ничего не делает), поэтому миксин на `AbstractContainerScreen` не скомпилируется/не применится.
+
+Рабочий хук — `MouseHandler.onScroll(long window, double xOffset, double yOffset)` HEAD:
+
+```java
+@Inject(method = "onScroll", at = @At("HEAD"), cancellable = true)
+private void mod$onScroll(long window, double x, double y, CallbackInfo ci) {
+    if (mc.screen instanceof AbstractContainerScreen<?> s && overlayOpenOn(s)) {
+        overlay.scroll(y);
+        ci.cancel();
+    }
+}
+```
+
+На 1.21.2+ остаётся обычный `AbstractContainerScreen.mouseScrolled`. Переключение страниц/вариантов колесом нужно проверять на каждой ветке: на 1.21/1.21.1 без этого хука скролл молча не работает.
+
+### 14.3. Смешивание `g.fill` и немедленных квадов на 1.21/1.21.1
+
+На 1.21–1.21.5 `g.fill(...)` идёт в отложенный батч (`RenderType.gui()`), а ручной tinted-quad (`Tesselator` + `BufferUploader.drawWithShader`) рисуется **сразу**. Если панель/затемнение нарисованы `g.fill`, а иконки/слои — квадами, отложенный `fill` сбрасывается позже и накрывает квады:
+
+- затемнение экрана рисуется поверх колеса (колесо выглядит темнее);
+- фон панели накрывает иконки строк.
+
+На 1.21.2–1.21.5 такой проблемы нет: `Ui.rect` и `blit` идут в один `guiTextured`-батч, порядок сохраняется.
+
+Решения:
+
+1. На 1.21/1.21.1 рисовать **все** прямоугольники тем же немедленным путём (tinted-quad с белой текстурой), а не `g.fill`.
+2. Либо вызывать `g.flush()` перед каждой секцией немедленных квадов (дороже и легче забыть).
+
+Проверка: открыть панель над инвентарём — иконка шестерёнки и иконки строк должны быть видны; затемнение не должно затемнять само колесо.
+
+### 14.4. Предметы, z и страты: текст поверх иконки
+
+`GuiGraphics.renderItem` переводит модель на `z+150` и вызывает `flush()` до/после. Поэтому:
+
+- текст, нарисованный **до** предмета, сбрасывается раньше и оказывается под моделью;
+- текст, нарисованный **после**, обычно оказывается сверху, но при отложенном батче порядок зависит от `RenderType`;
+- на 1.21.x надёжный способ — поднять текст на `z+200` (`g.pose().translate(0, 0, 200)`), как это делает ванильный счётчик стака;
+- на 1.21.6+ и 26.x — `g.nextStratum()` перед текстом/бейджем.
+
+Симптомы, которые это лечат:
+
+- счётчик оставшихся предметов в HUD-карточке очереди прячется за иконкой;
+- счётчик ингредиента на карточке рецепта не виден на непрозрачной иконке;
+- бейдж «в очереди» (песочные часы) исчезает под предметом колеса.
+
+Правило: **любой текст/иконка, который должен лежать на предмете, рисуйте в отдельном z/страте**, а не просто «после `renderItem`».
+
+### 14.5. Карточка поверх колеса и подсказка книги рецептов
+
+- Карточка рецепта должна иметь **непрозрачную подложку** (`Ui.backdrop` на 6 px больше карточки): иначе сквозь неё видны предметы колеса.
+- На 1.21.x перед карточкой нужен `g.flush()`: предметы колеса уже отправлены в item-батч и иначе окажутся поверх подложки/текста. На 1.21.6+ карточку начинает новый `nextStratum()`.
+- Книга рецептов рисует свой tooltip независимо от оверлея. Пока колесо открыто, его нужно отменять:
+  - 1.21–1.21.1: `RecipeBookComponent.renderTooltip(GuiGraphics, int, int, int slotX, int slotY)`;
+  - 1.21.2–1.21.8: `renderTooltip(GuiGraphics, int, int, Slot)`;
+  - 1.21.9+/26.x: `extractTooltip(GuiGraphicsExtractor, int, int, Slot)`.
+
+  Миксин `@Inject(method = ..., at = @At("HEAD"), cancellable = true)` → `if (overlayOpen()) ci.cancel()`. Сигнатуры различаются (slotX/slotY против `Slot`), поэтому файл миксина свой на каждую семью версий.
+
+### 14.6. Творческий инвентарь
+
+`CreativeModeInventoryScreen` — отдельный класс, не наследник `InventoryScreen`. Если оверлей проверяет только `InventoryScreen`/`CraftingScreen`, в креативе он не откроется. Добавьте его в список поддерживаемых экранов и в тесты. Его вкладки/скроллбар перехватывают клики до `super` — см. 14.1. Для скриншотов в тестах можно открыть `CraftingScreen`, но поведение именно в креативе надо проверять отдельно.
+
+### 14.7. Регресс-тест: клик по строке над вкладкой
+
+Баг «строка панели не кликается над вкладкой» ловится только реальным кликом. В client-gametest:
+
+1. Поставить GUI scale 4 (`mc.options.guiScale().set(4); mc.resizeGui();`, на 1.21.5 — `mc.resizeDisplay()`).
+2. Открыть `CreativeModeInventoryScreen`.
+3. Открыть панель настроек.
+4. Кликнуть по строке в её верхней части — координата должна попадать одновременно в строку и в первую вкладку.
+5. Проверить **состояние** настройки (`Config.get().queue == true`), а не скриншот.
+6. До фикса тест падает; после — проходит. Скриншот с открытой панелью над вкладками полезен как доказательство.
+
+## 15. Кастомный экран Mod Menu и захват клавиши
+
+> Проверено на экране настроек, который открывается из Mod Menu и выглядит одинаково на 1.21–26.3.
+
+### 15.1. Временная копия конфига
+
+Экран не меняет живой `Config` до нажатия **Save**:
+
+```java
+private final Config temp = Config.get().copySettings();
+```
+
+- **Save** — `live.copySettingsFrom(temp); live.save(); Minecraft.getInstance().options.save();`
+- **Cancel** — просто `onClose()`, `temp` выбрасывается.
+- **Reset** — `temp.reset(); rebuildWidgets();` (сброс только копии, живой конфиг не трогается).
+- `recent`/`counts` в копию не входят: это статистика, а не настройки.
+- Сам экран — обычный `Screen`, а не `OptionsSubScreen`/`OptionsList`: проще уложить мастер-переключатель на всю ширину, две колонки и нижний ряд кнопок. `OptionsList` имеет смысл, только если нужен скролл.
+
+### 15.2. Мастер-переключатель
+
+Первый виджет — переключатель «Использовать мод». Он хранится в `temp.enabled`; при выключении гейтятся колесо, шестерёнка, очередь, HUD и обработка клавиш/мыши. После **Save** значение применяется; после **Cancel** остаётся прежним.
+
+### 15.3. Кнопка с подсказкой: сигнатуры по версиям
+
+`ConfigButton extends Button` рисует multiline-подсказку. Метод, в котором это делается, меняется:
+
+| Версия | Метод | Вызов |
+| :--- | :--- | :--- |
+| 1.21–1.21.5 | `renderWidget(...)` | `g.renderTooltip(font, lines, mx, my)` |
+| 1.21.6–1.21.11 | `renderWidget(...)` | `g.setTooltipForNextFrame(font, lines, mx, my)` |
+| 26.1–26.2 | `extractContents(...)` | `setTooltipForNextFrame(...)` **внутри** |
+| 26.3 | `extractContents(...)` + отдельный `extractTooltipForNextRenderPass(...)` | `setTooltipForNextFrame(...)` в отдельном методе |
+
+Многострочный текст — только `List<FormattedCharSequence>`; `\n` в одном `Component` ванильный тултип рисует как мусор.
+
+### 15.4. Захват клавиши/мыши прямо в панели
+
+Не отправляйте игрока в Controls. Паттерн (`MODIFIER` — ваш `KeyMapping`, тот же, что виден в Controls):
+
+```java
+private static boolean listeningKey;
+
+static boolean captureKey(InputConstants.Key key) {
+    if (!listeningKey) return false;
+    if (key.getValue() != InputConstants.KEY_ESCAPE) {
+        MODIFIER.setKey(key);                       // KeyMapping
+        Minecraft.getInstance().options.save();
+    }
+    listeningKey = false;
+    return true;
+}
+
+static boolean captureMouse(int button) {
+    if (!listeningKey) return false;
+    MODIFIER.setKey(InputConstants.Type.MOUSE.getOrCreate(button));
+    Minecraft.getInstance().options.save();
+    listeningKey = false;
+    return true;
+}
+```
+
+- Вызов `captureKey` — в начале `keyPressed`, `captureMouse` — в начале `mouseClicked`.
+- Esc не назначается, а отменяет ожидание.
+- Пока идёт захват, показывайте «Нажмите клавишу...» и не давайте клику уйти в слоты/вкладки.
+- В Mod Menu есть отдельная кнопка `Key`: по клику `listening = true`, а следующий `mouseClicked`/`keyPressed` назначает клавишу/кнопку.
+
+### 15.5. Строки шестерёнки: подсказки и позиция
+
+- У каждой строки — `String[] tips()`; для наведённой строки рисуйте **один** список строк через `drawTooltip` (см. 15.3). Не вызывайте тултип для каждой строки — он будет мигать/перекрываться.
+- Позиция шестерёнки — 4 угла (`0..3`), по умолчанию левый верх; очередь остаётся в левом верхнем углу, чтобы не прыгала.
+- Красное предупреждение «На некоторых серверах это запрещено» рисуйте и в строке, и в подсказке: иначе на скриншотах/в тёмной теме оно теряется.
+- Кнопка «Настройки» в шестерёнке — это выбор позиции, а не открытие Mod Menu; не путайте с кнопкой Mod Menu.
